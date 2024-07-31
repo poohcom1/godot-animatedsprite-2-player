@@ -21,7 +21,7 @@ func _can_handle(object):
 		return true
 	return false
 
-func _parse_begin(object: Object) -> void:
+func _parse_end(object: Object) -> void:
 	var headerstyle = StyleBoxFlat.new()
 	headerstyle.bg_color = Color8(64, 69, 83)
 
