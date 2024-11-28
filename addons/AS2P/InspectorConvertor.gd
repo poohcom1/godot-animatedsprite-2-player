@@ -2,8 +2,10 @@
 extends EditorInspectorPlugin
 
 const NodeSelectorProperty = preload("./NodeSelectorProperty.gd")
+const AnimationSelectorProperty = preload("./AnimationSelectorProperty.gd")
 
 var node_selector: NodeSelectorProperty
+var animation_selector: AnimationSelectorProperty
 
 # Properties
 var anim_player: AnimationPlayer
@@ -30,13 +32,19 @@ func _parse_end(object: Object):
 		_on_animation_updated,
 		CONNECT_DEFERRED
 		)
+	node_selector.animated_sprite_updated.connect(
+		_on_animated_sprite_updated,
+		CONNECT_DEFERRED
+		)
 
+	animation_selector = AnimationSelectorProperty.new(anim_player)
+	animation_selector.label = "Animations"
 
 	# Import button
 	var button := Button.new()
 	button.text = "Import"
 	button.get_minimum_size().y = 26
-	button.button_down.connect(node_selector.convert_sprites)
+	button.button_down.connect(_on_import_button_down)
 
 	var buttonstyle = StyleBoxFlat.new()
 	buttonstyle.bg_color = Color8(32, 37, 49)
@@ -47,6 +55,7 @@ func _parse_end(object: Object):
 
 	container.add_child(header)
 	container.add_child(node_selector)
+	container.add_child(animation_selector)
 	container.add_spacer(false)
 	container.add_child(button)
 
@@ -55,6 +64,12 @@ func _parse_end(object: Object):
 
 func _on_animation_updated():
 	emit_signal("animation_updated", anim_player)
+
+func _on_animated_sprite_updated(animated_sprite: AnimatedSprite2D):
+	animation_selector.get_items(animated_sprite)
+
+func _on_import_button_down():
+	node_selector.convert_sprites(animation_selector.animations_selected)
 
 # Child class
 class CustomEditorInspectorCategory extends Control:
@@ -102,4 +117,3 @@ class CustomEditorInspectorCategory extends Control:
 
 		var color := get_theme_color(&"font_color", &"Tree")
 		draw_string(font, Vector2(ofs, font.get_ascent(font_size) + (get_size().y - font.get_height(font_size)) / 2).floor(), title, HORIZONTAL_ALIGNMENT_LEFT, get_size().x, font_size, color);
-

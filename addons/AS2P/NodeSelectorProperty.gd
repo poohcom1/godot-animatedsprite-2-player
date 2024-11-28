@@ -8,6 +8,8 @@ var anim_player: AnimationPlayer
 var drop_down := OptionButton.new()
 
 signal animation_updated()
+signal animated_sprite_updated(animated_sprite: AnimatedSprite2D)
+signal items_updated()
 
 func get_animatedsprite():
 	var root = get_tree().edited_scene_root
@@ -35,9 +37,10 @@ func _init(_anim_player):
 
 	drop_down.clear()
 
+	drop_down.item_selected.connect(_on_drop_down_item_selected)
+
 func _ready():
 	get_items()
-
 
 func get_items():
 	drop_down.clear()
@@ -50,7 +53,15 @@ func get_items():
 
 		drop_down.add_item(anim_player.get_path_to(anim_sprite), i)
 
-func convert_sprites():
+	emit_signal("items_updated")
+
+	if not anim_sprites.is_empty():
+		emit_signal("animated_sprite_updated", anim_sprites[0])
+
+func _on_drop_down_item_selected(index: int):
+	emit_signal("animated_sprite_updated", get_animatedsprite())
+
+func convert_sprites(animations_to_import: Array[String]):
 	var animated_sprite = get_node(get_animatedsprite().get_path())
 
 	var count := 0
@@ -62,6 +73,9 @@ func convert_sprites():
 		print("[AS2P] Selected AnimatedSprite2D has no frames!")
 
 	for anim in sprite_frames.get_animation_names():
+		if not animations_to_import.has(anim):
+			continue
+
 		if anim.is_empty():
 			printerr("[AS2P] SpriteFrames on AnimatedSprite2D '%s' has an \
 animation named empty string '', it will be ignored" % animated_sprite.name)
